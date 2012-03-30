@@ -443,9 +443,9 @@ struct SceneCloudView
 
     switch (extraction_mode_)
     {
-    case 0: cout << "Cloud exctraction mode: GPU, Connected-6" << endl; break;
-    case 1: cout << "Cloud exctraction mode: CPU, Connected-6    (requires a lot of memory)" << endl; break;
-    case 2: cout << "Cloud exctraction mode: CPU, Connected-26   (requires a lot of memory)" << endl; break;
+    case 0: cout << "Cloud extraction mode: GPU, Connected-6" << endl; break;
+    case 1: cout << "Cloud extraction mode: CPU, Connected-6    (requires a lot of memory)" << endl; break;
+    case 2: cout << "Cloud extraction mode: CPU, Connected-26   (requires a lot of memory)" << endl; break;
     }
     ;
   }
