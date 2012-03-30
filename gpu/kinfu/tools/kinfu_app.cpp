@@ -520,7 +520,7 @@ struct KinFuApp
   enum { PCD_BIN = 1, PCD_ASCII = 2, PLY = 3, MESH_PLY = 7, MESH_VTK = 8 };
   
   KinFuApp(pcl::Grabber& source, float vsz) : exit_ (false), scan_ (false), scan_mesh_(false), scan_volume_ (false), independent_camera_ (false),
-    registration_ (false), integrate_colors_ (false), focal_length_(-1.f), capture_ (source), time_ms_(0)
+      registration_ (false), integrate_colors_ (false), focal_length_(-1.f), capture_ (source), time_ms_(0), save_(false)
   {    
     //Init Kinfu Tracker
     Eigen::Vector3f volume_size = Vector3f::Constant (vsz/*meters*/);    
@@ -544,8 +544,13 @@ struct KinFuApp
     scene_cloud_view_.cloud_viewer_.registerKeyboardCallback (keyboard_callback, (void*)this);
     image_view_.viewerScene_.registerKeyboardCallback (keyboard_callback, (void*)this);
     image_view_.viewerDepth_.registerKeyboardCallback (keyboard_callback, (void*)this);
-        
+
+    float diag = sqrt ((float)kinfu_.cols () * kinfu_.cols () + kinfu_.rows () * kinfu_.rows ());
+    scene_cloud_view_.cloud_viewer_.camera_.fovy = 2 * atan (diag / (2 * f)) * 1.5;
+    
     scene_cloud_view_.toggleCube(volume_size);
+
+    kinfu_.setResetCallback(boost::bind(&KinFuApp::resetCallback,this));
   }
 
   ~KinFuApp()
@@ -766,6 +771,22 @@ struct KinFuApp
   }
 
   void
+  reset()
+  {
+    kinfu_.reset();
+  }
+
+  void
+  resetCallback()
+  {
+	  if (save_) {
+		  // take mesh and save.
+          scene_cloud_view_.showMesh(kinfu_, integrate_colors_);
+          writeMesh(KinFuApp::MESH_PLY);
+	  }
+  }
+
+  void
   printHelp ()
   {
     cout << endl;
@@ -781,6 +802,8 @@ struct KinFuApp
     cout << "    B    : toggle volume bounds" << endl;
     cout << "    *    : toggle scene view painting ( requires registration mode )" << endl;
     cout << "    C    : clear clouds" << endl;    
+    cout << "    R    : force reset" << endl;    
+    cout << "    S    : toggle auto-save on reset" << endl;
     cout << "   1,2,3 : save cloud to PCD(binary), PCD(ASCII), PLY(ASCII)" << endl;
     cout << "    7,8  : save mesh to PLY, VTK" << endl;
     cout << "   X, V  : TSDF volume utility" << endl;
@@ -797,6 +820,7 @@ struct KinFuApp
   bool registration_;
   bool integrate_colors_;  
   float focal_length_;
+  bool save_;
   
   pcl::Grabber& capture_;
   KinfuTracker kinfu_;
@@ -841,6 +865,8 @@ struct KinFuApp
       case (int)'c': case (int)'C': app->scene_cloud_view_.clearClouds (true); break;
       case (int)'i': case (int)'I': app->toggleIndependentCamera (); break;
       case (int)'b': case (int)'B': app->scene_cloud_view_.toggleCube(app->kinfu_.volume().getSize()); break;
+      case (int)'r': case (int)'R': app->reset(); break;
+      case (int)'s': case (int)'S': app->save_ = !app->save_; break;
       case (int)'7': case (int)'8': app->writeMesh (key - (int)'0'); break;
       case (int)'1': case (int)'2': case (int)'3': app->writeCloud (key - (int)'0'); break;      
       case '*': app->image_view_.toggleImagePaint (); break;
@@ -914,13 +940,12 @@ print_cli_help ()
 {
   cout << "\nKinfu app concole parameters help:" << endl;
   cout << "    --help, -h                      : print this message" << endl;  
-  cout << "    --registration, -r              : try to enable registration ( requires source to support this )" << endl;
   cout << "    --current-cloud, -cc            : show current frame cloud" << endl;
   cout << "    --save-views, -sv               : accumulate scene view and save in the end ( Requires OpenCV. Will cause 'bad_alloc' after some time )" << endl;  
   cout << "    --registration, -r              : enable registration mode" << endl; 
   cout << "    --integrate-colors, -ic         : enable color integration mode ( allows to get cloud with colors )" << endl;   
-  cout << "    -volume_suze <size_in_meters>   : define integration volume size" << endl;   
-  cout << "    -dev <deivce>, -oni <oni_file>  : select depth source. Default will be selected if not specified" << endl;
+  cout << "    -volume_size <size_in_meters>   : define integration volume size" << endl;   
+  cout << "    -dev <device>, -oni <oni_file>  : select depth source. Default will be selected if not specified" << endl;
   cout << "";
   cout << " For RGBD benchmark (Requires OpenCV):" << endl; 
   cout << "    -eval <eval_folder> [-match_file <associations_file_in_the_folder>]" << endl;
