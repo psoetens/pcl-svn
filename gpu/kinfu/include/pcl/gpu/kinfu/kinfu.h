@@ -48,6 +48,7 @@
 #include <pcl/point_cloud.h>
 #include <Eigen/Core>
 #include <vector>
+#include <boost/function.hpp>
 
 namespace pcl
 {
@@ -178,6 +179,16 @@ namespace pcl
         void
         getLastFrameNormals (DeviceArray2D<NormalType>& normals) const;
 
+        /** \brief Performs the tracker reset to initial  state. It's used if case of camera tracking fail.
+          */
+        void
+        reset ();
+
+        /** \brief Installs a callback which is called right before a reset().
+         * \param[cb] The function to call in case of reset.
+         */
+        void
+        setResetCallback(boost::function<void(void)> cb);
       private:
         
         /** \brief Number of pyramid levels */
@@ -266,10 +277,7 @@ namespace pcl
         void
         allocateBufffers (int rows_arg, int cols_arg);
 
-        /** \brief Performs the tracker reset to initial  state. It's used if case of camera tracking fail.
-          */
-        void
-        reset ();       
+        boost::function<void(void)> reset_callback_;
     };
   }
 };

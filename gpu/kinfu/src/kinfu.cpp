@@ -165,6 +165,9 @@ pcl::gpu::KinfuTracker::reset()
   if (global_time_)
     cout << "Reset" << endl;
 
+  if (reset_callback_)
+	  reset_callback_();
+
   global_time_ = 0;
   rmats_.clear ();
   tvecs_.clear ();
@@ -176,6 +179,12 @@ pcl::gpu::KinfuTracker::reset()
     
   if (color_volume_) // color integration mode is enabled
     color_volume_->reset();    
+}
+
+void
+pcl::gpu::KinfuTracker::setResetCallback(boost::function<void(void)> cb)
+{
+	reset_callback_ = cb;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
