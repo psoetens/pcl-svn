@@ -36,6 +36,7 @@
 
 #include <XnOS.h>
 #include <XnCppWrapper.h>
+#include <XnModuleCppInterface.h>
 
 #include "openni_capture.h"
 #include <pcl/gpu/containers/initialization.h>
@@ -85,6 +86,7 @@ struct pcl::gpu::CaptureOpenNI::Impl
   ProductionNode node;
   DepthMetaData depthMD;
   ImageMetaData imageMD;
+  Player player;
   XnChar strError[1024];
 
   bool has_depth;
@@ -206,6 +208,9 @@ pcl::gpu::CaptureOpenNI::open (const std::string& filename)
   rc = impl_->context.FindExistingNode (XN_NODE_TYPE_IMAGE, impl_->image);
   impl_->has_image = (rc == XN_STATUS_OK);
 
+  rc = impl_->context.FindExistingNode (XN_NODE_TYPE_PLAYER, impl_->player);
+  assert(rc == XN_STATUS_OK);
+
   if (!impl_->has_depth)
     REPORT_ERROR ("No depth nodes. Check your configuration");
 
@@ -221,6 +226,17 @@ pcl::gpu::CaptureOpenNI::open (const std::string& filename)
 
   getParams ();
 }
+
+void
+pcl::gpu::CaptureOpenNI::setRepeat (bool on_off)
+{
+  if (on_off == false)
+	  impl_->player.SetRepeat(FALSE);
+  else
+	  impl_->player.SetRepeat(TRUE);
+}
+
+
 
 void
 pcl::gpu::CaptureOpenNI::release ()

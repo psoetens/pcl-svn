@@ -64,6 +64,12 @@ public:
     void open(const std::string& oni_filename);
     void release();
 
+    /**
+     * Turns on/off repeating an oni file.
+     * Defaults to on.
+     */
+    void setRepeat(bool on_off);
+
     ~CaptureOpenNI();
 
     bool grab (PtrStepSz<const unsigned short>& depth, PtrStepSz<const RGB>& rgb24);
