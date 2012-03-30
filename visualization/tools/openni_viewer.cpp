@@ -46,7 +46,7 @@
 #include <pcl/console/parse.h>
 #include <pcl/console/time.h>
 
-#define SHOW_FPS 1
+//#define SHOW_FPS 1
 #if SHOW_FPS
 #define FPS_CALC(_WHAT_) \
 do \
