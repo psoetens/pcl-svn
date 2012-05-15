@@ -298,6 +298,7 @@ namespace pcl
         int idx = (blockIdx.y * MAX_GRID_SIZE_X + blockIdx.x) * CTA_SIZE + tid;
       
 
+        // Check if this thread has nothing to do
         if (idx >= voxels_count)
           return;
 

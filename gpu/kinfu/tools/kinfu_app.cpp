@@ -519,15 +519,18 @@ struct KinFuApp
 {
   enum { PCD_BIN = 1, PCD_ASCII = 2, PLY = 3, MESH_PLY = 7, MESH_VTK = 8 };
   
-  KinFuApp(pcl::Grabber& source, float vsz) : exit_ (false), scan_ (false), scan_mesh_(false), scan_volume_ (false), independent_camera_ (false),
+  KinFuApp(pcl::Grabber& source, float vsz, vszz) : exit_ (false), scan_ (false), scan_mesh_(false), scan_volume_ (false), independent_camera_ (false),
       registration_ (false), integrate_colors_ (false), focal_length_(-1.f), capture_ (source), time_ms_(0), save_(false)
   {    
-    //Init Kinfu Tracker
-    Eigen::Vector3f volume_size = Vector3f::Constant (vsz/*meters*/);    
+    //Init Kinfu Tracker Z,X = ground surface, Y = height (fixed on 3m)
+    Eigen::Vector3f volume_size = Eigen::Vector3f(vszx,4,vszz/*meters*/);
+
+    float f = capture_.depth_focal_length_VGA;
+    kinfu_.setDepthIntrinsics (f, f);
     kinfu_.volume().setSize (volume_size);
 
     Eigen::Matrix3f R = Eigen::Matrix3f::Identity ();   // * AngleAxisf( pcl::deg2rad(-30.f), Vector3f::UnitX());
-    Eigen::Vector3f t = volume_size * 0.5f - Vector3f (0, 0, volume_size (2) / 2 * 1.2f);
+    Eigen::Vector3f t = Vector3f (volume_size (0)*0.5f, 2, 0 ); // middle of X, 1m above floor at Z==0
 
     Eigen::Affine3f pose = Eigen::Translation3f (t) * Eigen::AngleAxisf (R);
 
@@ -1006,10 +1009,10 @@ main (int argc, char* argv[])
   }
   catch (const pcl::PCLException& /*e*/) { return cout << "Can't opencv depth source" << endl, -1; }
 
-  float volume_size = 3.f;
-  pc::parse_argument (argc, argv, "-volume_size", volume_size);
-        
-  KinFuApp app (*capture, volume_size);
+  float volume_size_x = 3.f, volume_size_z = 3.f;
+  pc::parse_2x_arguments (argc, argv, "-volume_size", volume_size_x, volume_size_z);
+          
+  KinFuApp app (*capture, volume_size_x, volume_size_z);
 
   
   if (pc::parse_argument (argc, argv, "-eval", eval_folder) > 0)
