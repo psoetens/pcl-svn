@@ -519,7 +519,7 @@ struct KinFuApp
 {
   enum { PCD_BIN = 1, PCD_ASCII = 2, PLY = 3, MESH_PLY = 7, MESH_VTK = 8 };
   
-  KinFuApp(pcl::Grabber& source, float vsz, vszz) : exit_ (false), scan_ (false), scan_mesh_(false), scan_volume_ (false), independent_camera_ (false),
+  KinFuApp(pcl::Grabber& source, float vszx, float vszz) : exit_ (false), scan_ (false), scan_mesh_(false), scan_volume_ (false), independent_camera_ (false),
       registration_ (false), integrate_colors_ (false), focal_length_(-1.f), capture_ (source), time_ms_(0), save_(false)
   {    
     //Init Kinfu Tracker Z,X = ground surface, Y = height (fixed on 3m)
@@ -988,7 +988,7 @@ main (int argc, char* argv[])
     else
     if (pc::parse_argument (argc, argv, "-oni", oni_file) > 0)
     {    
-      capture.reset( new pcl::ONIGrabber(oni_file, true, true) );
+      capture.reset( new pcl::ONIGrabber(oni_file, false, true) );
     }
     else
     if (pc::parse_argument (argc, argv, "-eval", eval_folder) > 0)
