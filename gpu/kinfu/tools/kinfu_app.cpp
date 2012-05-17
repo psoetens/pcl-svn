@@ -525,8 +525,8 @@ struct KinFuApp
     //Init Kinfu Tracker Z,X = ground surface, Y = height (fixed on 3m)
     Eigen::Vector3f volume_size = Eigen::Vector3f(vszx,4,vszz/*meters*/);
 
-    float f = capture_.depth_focal_length_VGA;
-    kinfu_.setDepthIntrinsics (f, f);
+    //float f = capture_.depth_focal_length_VGA;
+    //kinfu_.setDepthIntrinsics (f, f);
     kinfu_.volume().setSize (volume_size);
 
     Eigen::Matrix3f R = Eigen::Matrix3f::Identity ();   // * AngleAxisf( pcl::deg2rad(-30.f), Vector3f::UnitX());
@@ -548,9 +548,6 @@ struct KinFuApp
     image_view_.viewerScene_.registerKeyboardCallback (keyboard_callback, (void*)this);
     image_view_.viewerDepth_.registerKeyboardCallback (keyboard_callback, (void*)this);
 
-    float diag = sqrt ((float)kinfu_.cols () * kinfu_.cols () + kinfu_.rows () * kinfu_.rows ());
-    scene_cloud_view_.cloud_viewer_.camera_.fovy = 2 * atan (diag / (2 * f)) * 1.5;
-    
     scene_cloud_view_.toggleCube(volume_size);
 
     kinfu_.setResetCallback(boost::bind(&KinFuApp::resetCallback,this));
