@@ -76,6 +76,8 @@ namespace openni_wrapper
 
     bool trigger ();
     bool isStreaming () const throw ();
+
+    int getDepthFrames() const { return frames; }
   protected:
     virtual boost::shared_ptr<Image> getCurrentImage (boost::shared_ptr<xn::ImageMetaData> image_meta_data) const throw ();
 
@@ -88,6 +90,8 @@ namespace openni_wrapper
     boost::thread player_thread_;
     mutable boost::mutex player_mutex_;
     boost::condition_variable player_condition_;
+    int frames;
+    bool done_;
     bool streaming_;
     bool depth_stream_running_;
     bool image_stream_running_;

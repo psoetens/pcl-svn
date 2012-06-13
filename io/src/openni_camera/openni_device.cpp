@@ -373,7 +373,7 @@ openni_wrapper::OpenNIDevice::Init ()
     //focal length from mm -> pixels (valid for 1280x1024)
     depth_focal_length_SXGA_ = static_cast<float> (static_cast<XnDouble> (depth_focal_length_SXGA) / pixel_size);
 
-    depth_thread_ = boost::thread (&OpenNIDevice::DepthDataThreadFunction, this);
+    //depth_thread_ = boost::thread (&OpenNIDevice::DepthDataThreadFunction, this);
   }
 
   if (hasImageStream ())
@@ -742,16 +742,18 @@ openni_wrapper::OpenNIDevice::ImageDataThreadFunction ()
 void 
 openni_wrapper::OpenNIDevice::DepthDataThreadFunction ()
 {
-  while (true)
-  {
-    // lock before checking running flag
-    unique_lock<mutex> depth_lock (depth_mutex_);
+//  unique_lock<mutex> depth_thread_lock (depth_thread_mutex_);
+//  while (true)
+//  {
+//    // lock before checking running flag
+//    if (quit_)
+//      return;
+//    depth_condition_.wait (depth_thread_lock);
     if (quit_)
       return;
-    depth_condition_.wait (depth_lock);
-    if (quit_)
-      return;
+    cout << "+" << endl;
 
+	unique_lock<mutex> depth_lock (depth_mutex_);
     depth_generator_.WaitAndUpdateData ();
     boost::shared_ptr<xn::DepthMetaData> depth_data (new xn::DepthMetaData);
     depth_generator_.GetMetaData (*depth_data);
@@ -764,7 +766,8 @@ openni_wrapper::OpenNIDevice::DepthDataThreadFunction ()
     {
       callbackIt->second.operator()(depth_image);
     }
-  }
+//  }
+//  depth_thread_lock.unlock ();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -801,6 +804,7 @@ void __stdcall
 openni_wrapper::OpenNIDevice::NewDepthDataAvailable (xn::ProductionNode&, void* cookie) throw ()
 {
   OpenNIDevice* device = reinterpret_cast<OpenNIDevice*>(cookie);
+  boost::mutex::scoped_lock depth_lock (device->depth_thread_mutex_); // block until thread function has finished processing.
   device->depth_condition_.notify_all ();
 }
 

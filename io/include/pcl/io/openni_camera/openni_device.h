@@ -402,6 +402,8 @@ namespace openni_wrapper
     {
       depth_focal_length_SXGA_ = focal_length;
     }
+
+    virtual int getDepthFrames() const { return 0; };
   private:
     // make OpenNIDevice non copyable
     OpenNIDevice (OpenNIDevice const &);
@@ -485,6 +487,7 @@ namespace openni_wrapper
     bool quit_;
     mutable boost::mutex image_mutex_;
     mutable boost::mutex depth_mutex_;
+    mutable boost::mutex depth_thread_mutex_;
     mutable boost::mutex ir_mutex_;
     boost::condition_variable image_condition_;
     boost::condition_variable depth_condition_;

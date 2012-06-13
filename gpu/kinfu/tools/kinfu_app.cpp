@@ -37,6 +37,7 @@
 #define _CRT_SECURE_NO_DEPRECATE
 
 #include <iostream>
+#include <vector>
 
 #include <pcl/console/parse.h>
 
@@ -520,10 +521,10 @@ struct KinFuApp
   enum { PCD_BIN = 1, PCD_ASCII = 2, PLY = 3, MESH_PLY = 7, MESH_VTK = 8 };
   
   KinFuApp(pcl::Grabber& source, float vszx, float vszz) : exit_ (false), scan_ (false), scan_mesh_(false), scan_volume_ (false), independent_camera_ (false),
-      registration_ (false), integrate_colors_ (false), focal_length_(-1.f), capture_ (source), time_ms_(0), save_(false)
+      registration_ (false), integrate_colors_ (false), focal_length_(-1.f), capture_ (source), time_ms_(0), save_(true), frames_(0)
   {    
     //Init Kinfu Tracker Z,X = ground surface, Y = height (fixed on 3m)
-    Eigen::Vector3f volume_size = Eigen::Vector3f(vszx,4,vszz/*meters*/);
+    Eigen::Vector3f volume_size = Eigen::Vector3f(vszx,3,vszz/*meters*/);
 
     //float f = capture_.depth_focal_length_VGA;
     //kinfu_.setDepthIntrinsics (f, f);
@@ -730,7 +731,9 @@ struct KinFuApp
       {      
         bool has_data = data_ready_cond_.timed_wait(lock, boost::posix_time::millisec(100));
         if(has_data)
-        {                           
+        {
+          ++frames_;
+          cout << "*" << endl;
           try { this->execute (depth_, rgb24_); }
           catch (const std::bad_alloc& /*e*/) { cout << "Bad alloc" << endl; break; }
           catch (const std::exception& /*e*/) { cout << "Exception" << endl; break; }
@@ -738,13 +741,15 @@ struct KinFuApp
         scene_cloud_view_.cloud_viewer_.spinOnce (3);                  
       }        
       capture_.stop ();
+      cout << "Captured frames: " << capture_.getDepthFrames() << " , Processed frames: " << frames_ << endl;
     }
     c.disconnect();
   }
 
   void
-  writeCloud (int format) const
+  writeCloud (int format)
   {      
+    //boost::mutex::scoped_lock lock(data_ready_mutex_);
     const SceneCloudView& view = scene_cloud_view_;
 
     if(view.point_colors_ptr_->points.empty()) // no colors
@@ -764,8 +769,9 @@ struct KinFuApp
   }
 
   void
-  writeMesh(int format) const
+  writeMesh(int format)
   {
+    //boost::mutex::scoped_lock lock(data_ready_mutex_);
     if (scene_cloud_view_.mesh_ptr_) 
       writePoligonMeshFile(format, *scene_cloud_view_.mesh_ptr_);
   }
@@ -845,6 +851,7 @@ struct KinFuApp
   PtrStepSz<const KinfuTracker::PixelRGB> rgb24_;  
 
   int time_ms_;
+  int frames_;
 
   static void
   keyboard_callback (const visualization::KeyboardEvent &e, void *cookie)

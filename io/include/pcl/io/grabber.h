@@ -107,6 +107,8 @@ namespace pcl
       virtual float 
       getFramesPerSecond () const = 0;
 
+      virtual int
+      getDepthFrames() const { return 0; };
     protected:
 
       virtual void

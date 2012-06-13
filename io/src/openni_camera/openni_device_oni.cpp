@@ -48,7 +48,7 @@ namespace openni_wrapper
 
 DeviceONI::DeviceONI(xn::Context& context, const std::string& file_name, bool repeat, bool streaming)
   : OpenNIDevice(context)
-  , streaming_ (streaming)
+  , streaming_ (streaming), frames(0), done_(false)
   , depth_stream_running_ (false)
   , image_stream_running_ (false)
   , ir_stream_running_ (false)
@@ -177,15 +177,22 @@ bool DeviceONI::isStreaming () const throw ()
 void DeviceONI::PlayerThreadFunction()
 {
   quit_ = false;
-  while (!quit_)
-    player_.ReadNext();
+  while (!quit_ && !player_.IsEOF()) {
+	  if (depth_stream_running_ || image_stream_running_ || ir_stream_running_) {
+		  player_.ReadNext();
+	  }
+  }
+  done_ = true;
 }
 
 void __stdcall DeviceONI::NewONIDepthDataAvailable (xn::ProductionNode&, void* cookie) throw ()
 {
   DeviceONI* device = reinterpret_cast<DeviceONI*>(cookie);
-  if (device->depth_stream_running_)
-    device->depth_condition_.notify_all ();
+  if (device->depth_stream_running_) {
+	  ++device->frames;
+	  cout << "-" <<endl;
+	  device->DepthDataThreadFunction();
+  }
 }
 
 void __stdcall DeviceONI::NewONIImageDataAvailable (xn::ProductionNode&, void* cookie) throw ()
