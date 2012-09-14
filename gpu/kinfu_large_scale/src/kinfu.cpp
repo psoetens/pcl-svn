@@ -173,7 +173,7 @@ pcl::gpu::KinfuTracker::rows ()
 void
 pcl::gpu::KinfuTracker::extractAndMeshWorld ()
 {
-  finished_ = true;
+  static int meshnbr=0;
   int cloud_size = 0;
   cloud_size = cyclical_.getWorldModel ()->getWorld ()->points.size();
   
@@ -184,8 +184,10 @@ pcl::gpu::KinfuTracker::extractAndMeshWorld ()
   }
   else
   {
-	PCL_INFO ("Saving current world to world.pcd with %d points.\n", cloud_size);
-	pcl::io::savePCDFile<pcl::PointXYZI> ("world.pcd", *(cyclical_.getWorldModel ()->getWorld ()), true);
+	stringstream filename;
+	filename << "world" << setw(3) << setfill('0') << meshnbr;
+	PCL_INFO (string("Saving current world to "+filename.str()+".pcd with %d points.\n").c_str(), cloud_size);
+	pcl::io::savePCDFile<pcl::PointXYZI> (filename.str() + ".pcd", *(cyclical_.getWorldModel ()->getWorld ()), true);
 	return;
   }
   
@@ -203,7 +205,7 @@ pcl::gpu::KinfuTracker::reset ()
 {
   if (global_time_)
     PCL_WARN ("Reset\n");
-    
+
   // dump current world to a pcd file
   /*
   if (global_time_)
@@ -339,8 +341,8 @@ pcl::gpu::KinfuTracker::operator() (const DepthMap& depth_raw)
       device::tranformMaps (vmaps_curr_[i], nmaps_curr_[i], device_initial_cam_rot, device_initial_cam_trans, vmaps_g_prev_[i], nmaps_g_prev_[i]);
 
 
-    if(perform_last_scan_)
-      finished_ = true;
+    //if(perform_last_scan_)
+    //  finished_ = true;
       
 
     ++global_time_;
@@ -561,8 +563,10 @@ pcl::gpu::KinfuTracker::operator() (const DepthMap& depth_raw)
     pcl::device::sync ();
   }
 
-  if(has_shifted && perform_last_scan_)
+  if(has_shifted && perform_last_scan_) {
     extractAndMeshWorld ();
+    reset();
+  }
 
   ++global_time_;
   return (true);

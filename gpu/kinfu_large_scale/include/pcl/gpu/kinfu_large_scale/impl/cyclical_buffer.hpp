@@ -86,10 +86,12 @@ pcl::gpu::CyclicalBuffer::performShift (const pcl::gpu::TsdfVolume::Ptr volume, 
   int size;   
   if(!last_shift)
   {
+	// only gets 'old' slice of buffer
     size = volume->fetchSliceAsCloud (cloud_buffer_device_xyz_, cloud_buffer_device_intensities_, &buffer_, offset_x, offset_y, offset_z); 
   }
   else
   {
+	// gets full buffer
     size = volume->fetchSliceAsCloud (cloud_buffer_device_xyz_, cloud_buffer_device_intensities_, &buffer_, buffer_.voxels_size.x - 1, buffer_.voxels_size.y - 1, buffer_.voxels_size.z - 1);
   }
   points = DeviceArray<PointXYZ> (cloud_buffer_device_xyz_.ptr (), size);
