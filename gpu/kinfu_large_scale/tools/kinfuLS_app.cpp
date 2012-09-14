@@ -1064,17 +1064,21 @@ writeCloudFile (int format, const CloudPtr& cloud_prt)
 void
 writePoligonMeshFile (int format, const pcl::PolygonMesh& mesh)
 {
-  if (format == KinFuLSApp::MESH_PLY)
-  {
-    cout << "Saving mesh to to 'mesh.ply'... " << flush;
-    pcl::io::savePLYFile("mesh.ply", mesh);		
-  }
-  else /* if (format == KinFuLSApp::MESH_VTK) */
-  {
-    cout << "Saving mesh to to 'mesh.vtk'... " << flush;
-    pcl::io::saveVTKFile("mesh.vtk", mesh);    
-  }  
-  cout << "Done" << endl;
+	static int meshnbr=0;
+	stringstream filename;
+	filename << "mesh" << setw(3) << setfill('0') << meshnbr;
+	if (format == KinFuLSApp::MESH_PLY)
+	{
+		cout << "Saving mesh to to '"+filename.str()+".ply'... " << flush;
+		pcl::io::savePLYFile(filename.str() + ".ply", mesh);
+	}
+	else /* if (format == KinFuLSApp::MESH_VTK) */
+	{
+		cout << "Saving mesh to to '"+filename.str()+".vtk'... " << flush;
+		pcl::io::saveVTKFile(filename.str() + ".vtk", mesh);
+	}
+	meshnbr++;
+	cout << "Done" << endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
