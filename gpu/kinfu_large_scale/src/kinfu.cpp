@@ -191,6 +191,12 @@ pcl::gpu::KinfuTracker::extractAndMeshWorld ()
   
 }
 
+void
+pcl::gpu::KinfuTracker::setResetCallback(boost::function<void(void)> cb)
+{
+	reset_callback_ = cb;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void
 pcl::gpu::KinfuTracker::reset ()
@@ -208,6 +214,9 @@ pcl::gpu::KinfuTracker::reset ()
     cyclical_.getWorldModel ()->reset ();
   }
   */
+
+  if (reset_callback_)
+  	  reset_callback_();
    
   global_time_ = 0;
   rmats_.clear ();

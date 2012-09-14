@@ -48,6 +48,7 @@
 #include <pcl/point_cloud.h>
 #include <Eigen/Core>
 #include <vector>
+#include <boost/function.hpp>
 
 #include <pcl/gpu/kinfu_large_scale/cyclical_buffer.h>
 #include <pcl/gpu/kinfu_large_scale/standalone_marching_cubes.h>
@@ -208,6 +209,16 @@ namespace pcl
         void
         extractAndMeshWorld ();
 
+        /** \brief Performs the tracker reset to initial  state. It's used if case of camera tracking fail.
+          */
+        void
+        reset ();
+
+        /** \brief Installs a callback which is called right before a reset().
+         * \param[cb] The function to call in case of reset.
+         */
+        void
+        setResetCallback(boost::function<void(void)> cb);
       private:
         
         /** \brief Cyclical buffer object */
@@ -300,10 +311,7 @@ namespace pcl
         void
         allocateBufffers (int rows_arg, int cols_arg);
 
-        /** \brief Performs the tracker reset to initial  state. It's used if case of camera tracking fail.
-          */
-        void
-        reset ();     
+        boost::function<void(void)> reset_callback_;
                 
         /** \brief When set to true, KinFu will extract the whole world and mesh it. */
         bool perform_last_scan_;
