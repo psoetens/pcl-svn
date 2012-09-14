@@ -562,7 +562,7 @@ struct KinFuLSApp
   enum { PCD_BIN = 1, PCD_ASCII = 2, PLY = 3, MESH_PLY = 7, MESH_VTK = 8 };
   
   KinFuLSApp(pcl::Grabber& source, float vsz, float shiftDistance, int snapshotRate) : exit_ (false), scan_ (false), scan_mesh_(false), scan_volume_ (false), independent_camera_ (false),
-    registration_ (false), integrate_colors_ (false), pcd_source_ (false), focal_length_(-1.f), capture_ (source), time_ms_(0)
+    registration_ (false), integrate_colors_ (false), pcd_source_ (false), focal_length_(-1.f), capture_ (source), time_ms_(0), save(false)
   {    
     //Init Kinfu Tracker
     Eigen::Vector3f volume_size = Vector3f::Constant (vsz/*meters*/);    
@@ -610,6 +610,8 @@ struct KinFuLSApp
     float width = 640.0f;
     screenshot_manager_.setCameraIntrinsics (pcl::device::FOCAL_LENGTH, height, width);
     snapshot_rate_ = snapshotRate;
+
+    kinfu_.setResetCallback(boost::bind(&KinFuApp::resetCallback,this));
   }
 
   ~KinFuLSApp()
@@ -901,6 +903,22 @@ struct KinFuLSApp
       writePoligonMeshFile(format, *scene_cloud_view_.mesh_ptr_);
   }
 
+  void
+  reset()
+  {
+    kinfu_.reset();
+  }
+
+  void
+  resetCallback()
+  {
+         if (save_) {
+                 // take mesh and save.
+          scene_cloud_view_.showMesh(kinfu_, integrate_colors_);
+          writeMesh(KinFuApp::MESH_PLY);
+         }
+  }
+
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void
   printHelp ()
@@ -917,12 +935,14 @@ struct KinFuLSApp
     cout << "    I    : toggle independent camera mode" << endl;
     cout << "    B    : toggle volume bounds" << endl;
     cout << "    *    : toggle scene view painting ( requires registration mode )" << endl;
-    cout << "    C    : clear clouds" << endl;    
+    cout << "    C    : clear clouds" << endl;
+    cout << "    R    : force reset" << endl;
+    cout << "    S    : toggle auto-save on reset" << endl;
     cout << "   1,2,3 : save cloud to PCD(binary), PCD(ASCII), PLY(ASCII)" << endl;
     cout << "    7,8  : save mesh to PLY, VTK" << endl;
     cout << "   X, V  : TSDF volume utility" << endl;
     cout << "   L, l  : On the next shift, KinFu will extract the whole current cube, extract the world and stop" << endl;
-    cout << "   S, s  : On the next shift, KinFu will extract the world and stop" << endl;
+    cout << "   X, x  : On the next shift, KinFu will extract the world and stop" << endl;
     cout << endl;
   }  
 
@@ -941,6 +961,7 @@ struct KinFuLSApp
   bool integrate_colors_;
   bool pcd_source_;
   float focal_length_;
+  bool save_;
   
   pcl::Grabber& capture_;
   KinfuTracker *kinfu_;
@@ -987,8 +1008,10 @@ struct KinFuLSApp
       case (int)'i': case (int)'I': app->toggleIndependentCamera (); break;
       case (int)'b': case (int)'B': app->scene_cloud_view_.toggleCube(app->kinfu_->volume().getSize()); break;
       case (int)'l': case (int)'L': app->kinfu_->performLastScan (); break;
-	  case (int)'s': case (int)'S': app->kinfu_->extractAndMeshWorld (); break;
-      case (int)'7': case (int)'8': app->writeMesh (key - (int)'0'); break;  
+	  case (int)'x': case (int)'X': app->kinfu_->extractAndMeshWorld (); break;
+	  case (int)'r': case (int)'R': app->reset(); break;
+	  case (int)'s': case (int)'S': app->save_ = !app->save_; break;
+	  case (int)'7': case (int)'8': app->writeMesh (key - (int)'0'); break;
       case (int)'1': case (int)'2': case (int)'3': app->writeCloud (key - (int)'0'); break;      
       case '*': app->image_view_.toggleImagePaint (); break;
 
